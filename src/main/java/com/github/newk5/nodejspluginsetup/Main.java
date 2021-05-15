@@ -1,4 +1,3 @@
-
 package com.github.newk5.nodejspluginsetup;
 
 import com.github.newk5.nodejspluginsetup.util.FileResourceUtils;
@@ -12,9 +11,11 @@ import java.io.OutputStreamWriter;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import java.util.logging.LogManager;
+import java.util.stream.Collectors;
 
 public class Main {
 
@@ -89,35 +90,36 @@ public class Main {
         File f = new File(javaHome);
         File generalJavaFolder = f.getParentFile().getParentFile();
 
-        File java8Folder = Arrays
+        List< File> javaFolders = Arrays
                 .stream(generalJavaFolder.listFiles())
-                .filter(folder -> (folder.getName().contains("java-8") || folder.getName().contains("jdk-8")) && folder.isDirectory())
-                .findFirst()
-                .orElse(null);
+                .filter(folder -> (folder.getName().contains("java-8") || folder.getName().contains("jdk-8") || folder.getName().contains("java-1.8")) && folder.isDirectory())
+                .collect(Collectors.toList());
 
-        if (java8Folder != null) {
-            File jvmBinary = java8Folder;
-            jvmBinary = new File(jvmBinary, "jre");
-            jvmBinary = new File(jvmBinary, "bin");
-            jvmBinary = new File(jvmBinary, "server");
-            jvmBinary = new File(jvmBinary, isWin ? "jvm.dll" : "libjvm.so");
+        for (File java8Folder : javaFolders) {
 
-            if (jvmBinary.exists() && jvmBinary.isFile()) {
-                return jvmBinary.getAbsolutePath();
-            } else {
-                //failed to find binary, searching in alternative directory...
-                jvmBinary = java8Folder;
+            if (java8Folder != null) {
+                File jvmBinary = java8Folder;
                 jvmBinary = new File(jvmBinary, "jre");
-                jvmBinary = new File(jvmBinary, "lib");
-                jvmBinary = new File(jvmBinary, "amd64");
+                jvmBinary = new File(jvmBinary, "bin");
                 jvmBinary = new File(jvmBinary, "server");
                 jvmBinary = new File(jvmBinary, isWin ? "jvm.dll" : "libjvm.so");
+
                 if (jvmBinary.exists() && jvmBinary.isFile()) {
                     return jvmBinary.getAbsolutePath();
+                } else {
+                    //failed to find binary, searching in alternative directory...
+                    jvmBinary = java8Folder;
+                    jvmBinary = new File(jvmBinary, "jre");
+                    jvmBinary = new File(jvmBinary, "lib");
+                    jvmBinary = new File(jvmBinary, "amd64");
+                    jvmBinary = new File(jvmBinary, "server");
+                    jvmBinary = new File(jvmBinary, isWin ? "jvm.dll" : "libjvm.so");
+                    if (jvmBinary.exists() && jvmBinary.isFile()) {
+                        return jvmBinary.getAbsolutePath();
+                    }
                 }
             }
         }
-
         return "specify path to " + (isWin ? "jvm.dll" : "libjvm.so") + " here";
 
     }
